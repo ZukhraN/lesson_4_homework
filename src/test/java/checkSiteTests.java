@@ -1,9 +1,5 @@
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
+
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.openqa.selenium.By;
@@ -18,27 +14,32 @@ public class checkSiteTests {
     private static final String BASE_URL = "https://bonigarcia.dev/selenium-webdriver-java/";
     private WebDriver driver;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         driver = new ChromeDriver();
-        driver.get(BASE_URL);
         driver.manage().window().maximize();
+        driver.get(BASE_URL);
     }
 
-    @After
+    @AfterEach
     public void tearDown(){
         driver.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/testdata.csv", numLinesToSkip = 1)
-        void checkLinksOfChapterTest(){
-        String navLink = "navigation1.html";
-        driver.findElement(By.xpath("//a[@href='navigation1.html']")).click();
+    public void checkLinksOfChapterTest(String chapterName, String linkText, String linkUrl, String headerName, boolean isFrame){
+        WebElement chapterNameTitle = driver.findElement(By.xpath("//div/h5[text()='"+ chapterName +"']"));
+        Assertions.assertEquals(chapterName, chapterNameTitle.getText());
 
-        WebElement navigationTitle = driver.findElement(By.xpath("//h1[@class='display-6']"));
-        Assertions.assertEquals("Navigation example", navigationTitle.getText());
-        Assertions.assertEquals(BASE_URL + navLink, driver.getCurrentUrl());
+        driver.findElement(By.xpath("//a[text()='"+ linkText +"']")).click();
+        if (isFrame) {
+            WebElement frameElement = driver.findElement(By.cssSelector("frame[name='frame-header']"));
+            driver.switchTo().frame(frameElement);
+        }
+        WebElement chapterTitle = driver.findElement(By.xpath("//h1[text()='"+ headerName +"']"));
+        Assertions.assertEquals(chapterTitle.getText(), headerName);
+        Assertions.assertEquals(linkUrl, driver.getCurrentUrl());
     }
 
     @Test
